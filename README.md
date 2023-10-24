@@ -1,44 +1,7 @@
-<h2>UXKit
-<img src="http://zeezide.com/img/UXKitIcon1024.png"
-  align="right" width="128" height="128" />
-</h2>
+CommonUX
+========
 
-![Swift3](https://img.shields.io/badge/swift-3-blue.svg)
-![Swift4](https://img.shields.io/badge/swift-4-blue.svg)
-![Swift5](https://img.shields.io/badge/swift-5-blue.svg)
-![macOS](https://img.shields.io/badge/os-macOS-green.svg?style=flat)
-![iOS](https://img.shields.io/badge/os-iOS-green.svg?style=flat)
-![Travis](https://travis-ci.org/ZeeZide/UXKit.svg?branch=develop)
-
-There is a rumor that something called *UXKit* exists as part of the Apple
-Photos application, enabling the same codebase to run on macOS and iOS.
-Though the
-[article](https://medium.com/@guilhermerambo/why-uikit-for-macos-is-important-ff4e74a82cf0)
-is probably incorrect in that this is an UIKit implementation for macOS:
-
-> UIKit for macOS already exists, and it is called UXKit
-> I heard about UXKit when Apple first introduced the new Photos app for macOS.
-
-At [ZeeZide](http://www.zeezide.de/) we are using something along the lines to
-build all applications for both, macOS and iOS.
-One demo of that are the
-[CodeCows](http://zeezide.com/en/products/codecows/index.html)
-and
-[ASCII Cows](http://zeezide.com/en/products/asciicows/index.html)
-applications, which share about 90% of the code, while offering unique system
-features on both platforms (e.g. Stickers on iOS and System Services on macOS).
-
-This is not only useful for actual deployment to macOS, but also during
-development, as it saves you a lot of the simulator or device testing hassle if
-you develop for macOS first. (e.g. you can do CoreBluetooth development on
-macOS)
-
-## ZeeZide UXKit
-
-The Apple acquired UXKit is not an official API, and there are good reasons for
-this.
-UXKit is more of a hack to get stuff running in both environments,
-and not a beautiful framework wrapping UIKit and/or AppKit.
+CommonUX is a collection of helpers to ease the differences between AppKit and UIKit and allow many parts of the user interface of an application to reuse the same code on macOS, iOS, and tvOS.
 
 This codebase while not small, has very little 'actual' code.
 Most stuff is just typealiases, constant aliases, etc.
@@ -47,7 +10,7 @@ The idea of this is NOT to provide a full cross platform abstraction.
 It is expected that a lot of apps will still carry `#if os(macOS)` like code to
 enable/disable specific features.
 
-WORK IN PROGRESS: Still cleaning up the stuff.
+Note: this is originally based on [UXKit from ZeeZide](https://github.com/ZeeZide), but has evolved a lot.
 
 ## How to do write Cross-Platform Code using UXKit
 
@@ -66,15 +29,6 @@ though both alias to `NSTextField`. This way the code will work right on
 both platforms.
 
 Note: The far majority of those are really just typealiases and not subclasses.
-
-TODO
-
-### View Identifiers
-
-TODO:
-- all views have `identifiers`
-  - uses accessibilityIdentifier on UIKit (is that OK?)
-- special type in Swift 4
 
 ### Target/Action
 

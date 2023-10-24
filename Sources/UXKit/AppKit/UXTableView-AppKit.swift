@@ -31,7 +31,7 @@
    * On iOS, this is builtin via `UITableViewCell`, and on macOS we provide
    * an own class for that (`NSTableViewCell`).
    */
-  public typealias UXTableViewCell      = NSTableViewCell // Yes! (own)
+//  public typealias UXTableViewCell      = NSTableViewCell // Yes! (own)
   
   public enum      UXTableViewCellStyle {
     // Hm. Not really used for now.
