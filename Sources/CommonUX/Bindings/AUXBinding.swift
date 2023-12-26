@@ -30,17 +30,17 @@ class AUXBinding: NSObject {
 		// view retains the binding
 		view.auxBindings.append(self)
 		// register for changes
-		NotificationCenter.default.addObserver(self, selector: #selector(handleOnChangeNotification), name: AUXObservationTracking.mutationNotificationName, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(handleOnChangeNotification), name: AUXObservatory.mutationNotificationName, object: nil)
 	}
 
 	func updateView() {
-		AUXObservationTracking.observe(updating: &observationSet) {
+		AUXObservatory.observe(updating: &observationSet) {
 			viewUpdateCallback(view)
 		}
 	}
 
 	@objc private func handleOnChangeNotification(_ notification: Notification) {
-		guard let changeSet = notification.userInfo?[AUXObservationTracking.tokensInfoKey] as? AUXObservationSet else { return }
+		guard let changeSet = notification.userInfo?[AUXObservatory.tokensInfoKey] as? AUXObservationSet else { return }
 		guard changeSet.overlaps(with: observationSet) else { return }
 		scheduleViewUpdate()
 	}

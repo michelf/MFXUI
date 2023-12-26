@@ -33,6 +33,7 @@ public struct AUXObservable<Value: Equatable> {
 	private mutating func setWrappedValue(_ newValue: Value, updateToken: Bool = true) {
 		assert(Thread.isMainThread)
 		guard wrappedValue != newValue else { return }
+		_changeToken.willChange()
 		_wrappedValue = newValue
 		_changeToken.didChange(updateToken: updateToken)
 	}
@@ -76,6 +77,7 @@ public struct AUXRawObservable<Value> {
 
 	private mutating func setWrappedValue(_ newValue: Value, updateToken: Bool = true) {
 		assert(Thread.isMainThread)
+		_changeToken.willChange()
 		_wrappedValue = newValue
 		_changeToken.didChange(updateToken: updateToken)
 	}
@@ -92,14 +94,17 @@ public struct AUXObservableToken {
 	public init() {}
 
 	public func didAccess() {
-		AUXObservationTracking.didAccess(revision)
+		AUXObservatory.didAccess(revision)
 	}
 
+	public mutating func willChange() {
+		AUXObservatory.willChange(revision)
+	}
 	public mutating func didChange() {
 		didChange(updateToken: true)
 	}
 	fileprivate mutating func didChange(updateToken: Bool) {
-		AUXObservationTracking.didChange(revision)
+		AUXObservatory.didChange(revision)
 		if updateToken {
 			revision = Self.nextRevision()
 		}
@@ -144,19 +149,21 @@ public struct AUXObservationSet: Hashable {
 	}
 
 	public static func onChange(_ apply: @escaping (AUXObservationSet) -> ()) -> AnyObject? {
-		NotificationCenter.default.addObserver(forName: AUXObservationTracking.mutationNotificationName, object: nil, queue: nil) { notification in
+		NotificationCenter.default.addObserver(forName: AUXObservatory.mutationNotificationName, object: nil, queue: nil) { notification in
 			assert(Thread.isMainThread)
-			if let observationSet = notification.userInfo?[AUXObservationTracking.tokensInfoKey] as? AUXObservationSet {
+			if let observationSet = notification.userInfo?[AUXObservatory.tokensInfoKey] as? AUXObservationSet {
 				apply(observationSet)
 			}
 		}
 	}
 }
 
-public enum AUXObservationTracking {
+extension AUXObservatory {
 
 	fileprivate static var _accessSet: AUXObservationSet?
 	fileprivate static var _changeSet: AUXObservationSet?
+
+	static var experimental_usesSwiftObservation = false
 
 	public static func observe(_ apply: () -> ()) -> AUXObservationSet {
 		var accessSet = AUXObservationSet()
@@ -180,29 +187,40 @@ public enum AUXObservationTracking {
 		return result
 	}
 	static var isObserving: Bool {
-		AUXObservationTracking._accessSet != nil
+		AUXObservatory._accessSet != nil
 	}
 
-
 	fileprivate static func didAccess(_ revision: AUXObservableToken.Revision) {
-		AUXObservationTracking._accessSet?.revisions.insert(revision)
+		AUXObservatory._accessSet?.revisions.insert(revision)
+		if experimental_usesSwiftObservation, #available(macOS 14, iOS 17, tvOS 17, *) {
+			observationRegistrar.access(shared, keyPath: \AUXObservatory[revision])
+		}
+	}
+
+	fileprivate static func willChange(_ revision: AUXObservableToken.Revision) {
+		if experimental_usesSwiftObservation, #available(macOS 14, iOS 17, tvOS 17, *) {
+			observationRegistrar.willSet(shared, keyPath: \AUXObservatory[revision])
+		}
 	}
 
 	fileprivate static func didChange(_ revision: AUXObservableToken.Revision) {
-		if AUXObservationTracking._changeSet == nil {
+		if experimental_usesSwiftObservation, #available(macOS 14, iOS 17, tvOS 17, *) {
+			observationRegistrar.didSet(shared, keyPath: \AUXObservatory[revision])
+		}
+		if AUXObservatory._changeSet == nil {
 			setupImplicitObservationTransaction()
 		}
-		AUXObservationTracking._changeSet!.revisions.insert(revision)
+		AUXObservatory._changeSet!.revisions.insert(revision)
 	}
 
 	private static func setupImplicitObservationTransaction() {
-		AUXObservationTracking._changeSet = AUXObservationSet()
+		AUXObservatory._changeSet = AUXObservationSet()
 		let runLoopReadyObserver = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.beforeWaiting.rawValue, false, 0) { observer, activity in
-			let changeSet = AUXObservationTracking._changeSet!
-			AUXObservationTracking._changeSet = nil
+			let changeSet = AUXObservatory._changeSet!
+			AUXObservatory._changeSet = nil
 			guard !changeSet.isEmpty else { return }
-			NotificationCenter.default.post(name: AUXObservationTracking.mutationNotificationName, object: nil, userInfo: [
-				AUXObservationTracking.tokensInfoKey: changeSet
+			NotificationCenter.default.post(name: AUXObservatory.mutationNotificationName, object: nil, userInfo: [
+				AUXObservatory.tokensInfoKey: changeSet
 			])
 		}
 		let runLoop = CFRunLoopGetMain()
@@ -211,5 +229,24 @@ public enum AUXObservationTracking {
 
 	internal static let mutationNotificationName = Notification.Name("_AUXObserveMut")
 	internal static let tokensInfoKey = "_AUXChTokens"
+
+}
+
+public final class AUXObservatory: Observable {
+
+	@available(macOS 14, iOS 17, tvOS 17, *)
+	static let shared = AUXObservatory()
+
+	@available(macOS 14, iOS 17, tvOS 17, *)
+	private init() {}
+
+	@available(macOS 14, iOS 17, tvOS 17, *)
+	fileprivate static let observationRegistrar = ObservationRegistrar()
+
+	@available(macOS 14, iOS 17, tvOS 17, *)
+	fileprivate subscript (_ revision: AUXObservableToken.Revision) -> () {
+		get { () }
+		set { _ = newValue }
+	}
 
 }
