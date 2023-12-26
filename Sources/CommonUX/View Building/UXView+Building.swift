@@ -63,11 +63,26 @@ extension UXView {
 			separator.boxType = .custom
 			separator.borderColor = color
 		}
+		return separator.withoutAutoresizingMaskConstraints().withExpansion(alongAxis: axis)
 #else
-		let separator = UXView(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
-		separator.backgroundColor = color ?? .tertiaryLabel
+		let separator = UXView(frame: CGRect(x: 0, y: 0, width: 10000, height: 10000))
+		separator.backgroundColor = color ?? .quaternaryLabel
+		switch axis {
+		case .horizontal:
+			separator.addConstraints([
+				separator.widthAnchor.constraint(equalToConstant: 10000000).withPriority(.defaultLow),
+				separator.heightAnchor.constraint(equalToConstant: 0.5),
+			])
+		case .vertical:
+			separator.addConstraints([
+				separator.widthAnchor.constraint(equalToConstant: 10000000).withPriority(.defaultLow),
+				separator.heightAnchor.constraint(equalToConstant: 0.5),
+			])
+		@unknown default:
+			assert(false, "Unknown axis \(axis).")
+		}
+		return separator.withoutAutoresizingMaskConstraints().withCompression(alongAxis: axis)
 #endif
-		return separator.withoutAutoresizingMaskConstraints().withFlexibility(alongAxis: axis)
 	}
 
 	public static func spacer(axis: UXStackViewAxis) -> UXView {
@@ -75,4 +90,11 @@ extension UXView {
 		return spacer.withoutAutoresizingMaskConstraints().withFlexibility(alongAxis: axis)
 	}
 
+}
+
+extension NSObjectProtocol where Self: UXView {
+	public func with(_ change: (Self) -> ()) -> Self {
+		change(self)
+		return self
+	}
 }

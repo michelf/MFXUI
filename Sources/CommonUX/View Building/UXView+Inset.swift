@@ -5,11 +5,11 @@ extension UXView {
 		#if os(macOS)
 		// using NSStackView as a wrapper because it
 		// doesn't clip its content
-		let wrapper = UXStackView()
+		let wrapper = UXStackView(axis: .horizontal) { self }
 		#else
 		let wrapper = UXView()
-		#endif
 		wrapper.addSubview(self)
+		#endif
 		wrapper.addConstraints([
 			topAnchor.constraint(equalTo: wrapper.topAnchor, constant: insets.top),
 			bottomAnchor.constraint(equalTo: wrapper.bottomAnchor, constant: -insets.bottom),
@@ -27,6 +27,10 @@ extension UXView {
 		self.insetBy(dx: inset, dy: inset)
 	}
 
+	public func indented(by indent: UXFloat? = nil) -> UXView {
+		self.inset(by: UXEdgeInsets(top: 0, left: indent ?? 20.5, bottom: 0, right: 0))
+	}
+
 	public func centerHorizontal(insets: UXEdgeInsets?) -> UXView {
 		let wrapper = UXView()
 		wrapper.addSubview(self)
@@ -35,6 +39,7 @@ extension UXView {
 			bottomAnchor.constraint(equalTo: wrapper.bottomAnchor, constant: -(insets?.bottom ?? 0)),
 			centerXAnchor.constraint(equalTo: wrapper.centerXAnchor),
 			leftAnchor.constraint(greaterThanOrEqualTo: wrapper.leftAnchor, constant: max(insets?.right ?? 0, insets?.left ?? 0)),
+			leftAnchor.constraint(equalTo: wrapper.leftAnchor, constant: max(insets?.right ?? 0, insets?.left ?? 0)).withPriority(.defaultHigh),
 		])
 		return wrapper.withoutAutoresizingMaskConstraints()
 	}

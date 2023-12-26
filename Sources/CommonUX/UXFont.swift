@@ -36,7 +36,9 @@ extension UXFont {
 
 	@available(tvOS, unavailable)
 	public static var largeTitle: UXFont {
+		#if !os(tvOS)
 		if #available(macOS 11, *) { return UXFont.preferredFont(forTextStyle: .largeTitle) }
+		#endif
 		return UXFont.systemFont(ofSize: 26)
 	}
 	public static var title1: UXFont {

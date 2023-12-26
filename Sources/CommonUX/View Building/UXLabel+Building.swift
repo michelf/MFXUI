@@ -21,9 +21,7 @@ extension UXLabel {
 		if let color {
 			self.textColor = color
 		}
-		if let font {
-			self.font = font
-		}
+		self.font = font ?? .body
 		if let alignment {
 			self.textAlignment = alignment
 		}

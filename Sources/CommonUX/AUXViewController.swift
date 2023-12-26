@@ -1,7 +1,7 @@
 #if os(macOS)
 import AppKit
 
-open class UXViewController: NSViewController {
+open class AUXViewController: NSViewController {
 
 	// Replace AppKit hooks with equivalents from UIKit.
 
@@ -24,5 +24,5 @@ open class UXViewController: NSViewController {
 #else
 import UIKit
 
-public typealias UXViewController = UIViewController
+public typealias AUXViewController = UIViewController
 #endif

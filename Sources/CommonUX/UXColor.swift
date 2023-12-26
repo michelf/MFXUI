@@ -16,8 +16,8 @@ extension UXColor {
 	}
 	#endif
 
-	/// Optional accent colors returns nil under macOS 10.13 and earlier, and also on iOS where
-	/// `tintColor` set to nil will propagate the accent color.
+	/// Returns `nil` under macOS 10.13 and earlier, and also on iOS where
+	/// `tintColor` will propagate the accent color unless changed for some view.
 	public static var optionalAccentColor: UXColor? {
 		#if os(macOS)
 		if #available(macOS 10.14, *) {

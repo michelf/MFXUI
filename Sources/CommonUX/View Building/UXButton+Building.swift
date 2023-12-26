@@ -26,6 +26,14 @@ public enum UXControlSize {
 		}
 	}
 	#endif
+	var font: UXFont {
+		switch self {
+		case .regular: return UXFont.body
+		case .small: return UXFont.subheadline
+		case .mini: return UXFont.footnote
+		case .large: return UXFont.body
+		}
+	}
 }
 
 extension UXButton {
@@ -37,12 +45,14 @@ extension UXButton {
 		}
 	}
 
-	public convenience init(title: String, image: UXImage? = nil, key: String? = nil, style: UXStyle = .regular, font: UXFont? = nil, target: AnyObject? = nil, action: Selector? = nil) {
-		self.init()
+	public convenience init(title: String, image: UXImage? = nil, key: String? = nil, style: UXStyle = .regular, font: UXFont? = nil) {
+#if os(macOS)
+			self.init()
+			self.bezelStyle = .rounded
+#else
+			self.init(type: .system)
+#endif
 		self.translatesAutoresizingMaskIntoConstraints = false
-		#if os(macOS)
-		self.bezelStyle = .rounded
-		#endif
 		if let key {
 			#if os(macOS)
 			self.keyEquivalent = key
@@ -51,18 +61,15 @@ extension UXButton {
 		}
 		self.title = title
 		self.image = image
-		if let action {
 #if os(macOS)
-			self.target = target
-			self.action = action
-#else
-			self.addTarget(target, action: action, for: .touchUpInside)
-#endif
-		}
-		style.transform(self)
 		if let font = font {
 			self.font = font
 		}
+#else
+		self.titleLabel?.font = font ?? .body
+		self.titleLabel?.adjustsFontForContentSizeCategory = true
+#endif
+		style.transform(self)
 	}
 
 }
@@ -74,7 +81,8 @@ extension UXButton.UXStyle {
 #if os(macOS)
 		$0.controlSize = .regular
 		_ = $0.constrainingMinSize(width: 80, height: nil)
-#else
+#elseif os(iOS)
+		$0.titleLabel?.font = UXControlSize.regular.font
 #endif
 	}
 	/// A large push button, suitable for main actions in alert-like panels.
@@ -89,6 +97,7 @@ extension UXButton.UXStyle {
 		}
 		_ = $0.constrainingMinSize(width: 80, height: nil)
 #else
+		$0.titleLabel?.font = UXControlSize.large.font
 #endif
 	}
 	/// A small push button, suitable for auxilary actions.
@@ -97,6 +106,7 @@ extension UXButton.UXStyle {
 		$0.controlSize = .small
 		_ = $0.constrainingMinSize(width: 80, height: nil)
 #else
+		$0.titleLabel?.font = UXControlSize.small.font
 #endif
 	}
 	/// A transparent small push button, suiutable for auxiliary actions.
@@ -106,6 +116,7 @@ extension UXButton.UXStyle {
 		$0.controlSize = .small
 		_ = $0.constrainingMinSize(width: 80, height: nil)
 #else
+		$0.titleLabel?.font = UXControlSize.small.font
 #endif
 	}
 	/// A transparent small push button, suiutable for auxiliary actions.
@@ -116,6 +127,7 @@ extension UXButton.UXStyle {
 		$0.font = .small()
 		_ = $0.constrainingMinSize(width: 80, height: nil)
 #else
+		$0.titleLabel?.font = UXControlSize.regular.font
 #endif
 	}
 	/// A button linking to a web page
@@ -134,6 +146,9 @@ extension UXButton.UXStyle {
 		_ = $0.constrainingMinSize(width: 80, height: nil)
 		$0.title = title
 #else
+		$0.image = UXImage(systemName: "arrow.right.circle")?.applyingSymbolConfiguration(.init(scale: .small))
+		$0.titleEdgeInsets.left = 4
+		$0.titleLabel?.font = UXControlSize.small.font
 #endif
 	}
 

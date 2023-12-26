@@ -60,6 +60,53 @@ extension NSObjectProtocol where Self: UXView {
 		return self
 	}
 
+	public func withExpansion(horizontal: Bool?, vertical: Bool?) -> Self {
+		switch horizontal {
+		case true:
+			setContentHuggingPriority(.init(1), for: .horizontal)
+		case false:
+			setContentHuggingPriority(.required, for: .horizontal)
+		default:
+			break
+		}
+		switch vertical {
+		case true:
+			setContentHuggingPriority(.init(1), for: .vertical)
+		case false:
+			setContentHuggingPriority(.required, for: .vertical)
+		default:
+			break
+		}
+		return self
+	}
+
+	public func withCompression(horizontal: Bool?, vertical: Bool?) -> Self {
+		switch horizontal {
+		case true:
+			setContentCompressionResistancePriority(.init(1), for: .horizontal)
+		case false:
+			setContentCompressionResistancePriority(.required, for: .horizontal)
+		default:
+			break
+		}
+		switch vertical {
+		case true:
+			setContentCompressionResistancePriority(.init(1), for: .vertical)
+		case false:
+			setContentCompressionResistancePriority(.required, for: .vertical)
+		default:
+			break
+		}
+		return self
+	}
+
+	public func withAspectRatio(_ ratio: Double) -> Self {
+		self.addConstraint(
+			self.widthAnchor.constraint(equalTo: self.heightAnchor, multiplier: ratio)
+		)
+		return self
+	}
+
 }
 
 extension NSObjectProtocol where Self: UXView {
@@ -75,6 +122,30 @@ extension NSObjectProtocol where Self: UXView {
 			return withFlexibility(horizontal: true, vertical: false)
 		case .vertical:
 			return withFlexibility(horizontal: false, vertical: true)
+		@unknown default:
+			assert(false, "Unknown axis \(axis).")
+			return self
+		}
+	}
+
+	internal func withExpansion(alongAxis axis: UXStackViewAxis) -> Self {
+		switch axis {
+		case .horizontal:
+			return withExpansion(horizontal: true, vertical: false)
+		case .vertical:
+			return withExpansion(horizontal: false, vertical: true)
+		@unknown default:
+			assert(false, "Unknown axis \(axis).")
+			return self
+		}
+	}
+
+	internal func withCompression(alongAxis axis: UXStackViewAxis) -> Self {
+		switch axis {
+		case .horizontal:
+			return withCompression(horizontal: true, vertical: false)
+		case .vertical:
+			return withCompression(horizontal: false, vertical: true)
 		@unknown default:
 			assert(false, "Unknown axis \(axis).")
 			return self

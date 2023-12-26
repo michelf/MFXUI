@@ -6,7 +6,15 @@ import UIKit
 
 extension UXTextField {
 
-	public convenience init(text: String = "", placeholder: String = "", font: UXFont? = nil, alignment: UXTextAlignment? = nil, color: UXColor? = nil, maxLines: Int? = nil) {
+	public convenience init(
+		text: String = "",
+		placeholder: String = "",
+		font: UXFont? = nil,
+		alignment: UXTextAlignment? = nil,
+		color: UXColor? = nil,
+		maxLines: Int? = nil,
+		lineBreakMode: NSLineBreakMode? = nil
+	) {
 		self.init()
 		#if os(macOS)
 		isEditable = true
@@ -25,8 +33,10 @@ extension UXTextField {
 		if let alignment {
 			self.textAlignment = alignment
 		}
-		self.maximumNumberOfLines = maxLines ?? 1
-		lineBreakMode = .byTruncatingTail
+		#if os(macOS)
+		self.maximumNumberOfLines = maxLines ?? 0
+		self.lineBreakMode = maxLines == 1 ? .byTruncatingTail : .byWordWrapping
+		#endif
 		self.text = text
 		self.translatesAutoresizingMaskIntoConstraints = false
 	}

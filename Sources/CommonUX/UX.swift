@@ -21,6 +21,8 @@ public typealias UXSegmentedControl = NSSegmentedControl
 public typealias UXTableViewCell = NSTableCellView
 public typealias UXStoryboardSegue = NSStoryboardSegue
 public typealias UXStepper = NSStepper
+@available(macOS 10.15, *)
+public typealias UXSwitch = NSSwitch
 
 extension UXButton {
 
@@ -230,8 +232,10 @@ public typealias UXBarButtonItem = UIBarButtonItem
 public typealias UXSegmentedControl = UISegmentedControl
 public typealias UXTableViewCell = UITableViewCell
 public typealias UXLayoutConstraint = NSLayoutConstraint
+public typealias UXLayoutGuide = UILayoutGuide
 public typealias UXStoryboardSegue = UIStoryboardSegue
 #if os(iOS)
+public typealias UXSwitch = UISwitch // iOS only
 public typealias UXStepper = UIStepper // iOS only
 #endif
 public typealias UXPopUp = UIButton

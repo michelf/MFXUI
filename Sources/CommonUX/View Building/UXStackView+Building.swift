@@ -8,7 +8,11 @@ public typealias UXStackViewAxis    = NSLayoutConstraint.Axis
 
 extension UXStackView { 
 
-	public convenience init(axis: UXStackViewAxis = .vertical, alignment: NSLayoutConstraint.Attribute? = nil, spacing: UXFloat = 0, @UXViewBuilder _ subviews: () -> [UXView]) {
+	#if os(macOS)
+	public typealias Alignment = NSLayoutConstraint.Attribute
+	#endif
+
+	public convenience init(axis: UXStackViewAxis = .vertical, alignment: Alignment? = nil, spacing: UXFloat = 0, @UXViewBuilder _ subviews: () -> [UXView]) {
 		let subviews = subviews()
 //		for (index, subview) in subviews.enumerated() {
 //			subview.translatesAutoresizingMaskIntoConstraints = false
@@ -28,3 +32,10 @@ extension UXStackView {
 	}
 
 }
+
+#if os(iOS) || os(tvOS)
+extension UXStackView.Alignment {
+	public static var centerX: Self { center }
+	public static var centerY: Self { center }
+}
+#endif

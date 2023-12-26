@@ -72,4 +72,77 @@ extension UXScrollView {
 	}
 #endif
 
+	public convenience init(background: UXColor? = nil, @UXSingleViewBuilder _ content: () -> UXView) {
+		let isHorizontalScrollingEnabled = { false }()
+#if os(macOS)
+		self.init(frame: .zero)
+
+		let content = content()
+		content.translatesAutoresizingMaskIntoConstraints = false
+		let containerView = UXView().withBackground(color: .systemOrange)
+		containerView.addSubview(content)
+
+		if isHorizontalScrollingEnabled {
+			containerView.autoresizingMask = [.width, .height]
+		} else {
+			containerView.autoresizingMask = [.width]
+		}
+
+		class FlippedClipView: NSClipView {
+			override var isFlipped: Bool { true }
+		}
+		self.contentView = FlippedClipView()
+
+		let layoutGuide: UXLayoutGuideOrView = if #available(macOS 11, *) {
+			self.contentView.safeAreaLayoutGuide
+		} else {
+			self.contentView
+		}
+
+		borderType = .noBorder
+		hasVerticalScroller = true
+		hasHorizontalScroller = isHorizontalScrollingEnabled
+		self.contentView.addSubview(containerView)
+		documentView = content
+		if let background {
+			backgroundColor = background
+		}
+		assert(containerView.superview == self.contentView)
+
+		layoutGuide.widthAnchor.constraint(equalTo: content.widthAnchor).isActive = true
+#else
+		self.init()
+
+		let content = content()
+		content.translatesAutoresizingMaskIntoConstraints = false
+
+		let containerView = self
+		self.isScrollEnabled = true
+		self.alwaysBounceVertical = true
+
+		let layoutGuide = safeAreaLayoutGuide
+		self.backgroundColor = background
+		containerView.addSubview(content)
+
+		let widthConstraint = layoutGuide.widthAnchor.constraint(equalTo: content.widthAnchor)
+		let heightConstraint = layoutGuide.heightAnchor.constraint(lessThanOrEqualTo: content.heightAnchor)
+		heightConstraint.priority = .init(1)
+
+		addConstraints([
+			contentLayoutGuide.topAnchor.constraint(equalTo: content.topAnchor),
+			contentLayoutGuide.bottomAnchor.constraint(lessThanOrEqualTo: content.bottomAnchor),
+			contentLayoutGuide.leadingAnchor.constraint(equalTo: content.leadingAnchor),
+			contentLayoutGuide.trailingAnchor.constraint(equalTo: content.trailingAnchor),
+		])
+		containerView.addConstraints([widthConstraint, heightConstraint])
+#endif
+	}
+
 }
+
+private protocol UXLayoutGuideOrView: NSObjectProtocol {
+	var widthAnchor: NSLayoutDimension { get }
+	var heightAnchor: NSLayoutDimension { get }
+}
+extension UXView: UXLayoutGuideOrView {}
+extension UXLayoutGuide: UXLayoutGuideOrView {}
