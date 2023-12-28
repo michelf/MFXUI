@@ -23,6 +23,8 @@ public typealias UXStoryboardSegue = NSStoryboardSegue
 public typealias UXStepper = NSStepper
 @available(macOS 10.15, *)
 public typealias UXSwitch = NSSwitch
+public typealias UXAction = NSMenuItem
+public typealias UXMenuElement = NSMenuItem
 
 extension UXButton {
 
@@ -239,6 +241,8 @@ public typealias UXSwitch = UISwitch // iOS only
 public typealias UXStepper = UIStepper // iOS only
 #endif
 public typealias UXPopUp = UIButton
+public typealias UXAction = UIAction
+public typealias UXMenuElement = UIMenuElement
 
 extension UXButton {
 

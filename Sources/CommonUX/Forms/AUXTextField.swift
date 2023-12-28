@@ -42,6 +42,14 @@ open class AUXTextField: NSTextField {
 		return true
 	}
 
+	open override func textDidChange(_ notification: Notification) {
+		super.textDidChange(notification)
+		onEditingCallback?(self)
+	}
+
+	@usableFromInline
+	internal var onEditingCallback: ((AUXTextField) -> ())?
+
 }
 #else
 import UIKit

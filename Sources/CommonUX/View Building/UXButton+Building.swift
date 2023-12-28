@@ -47,10 +47,17 @@ extension UXButton {
 
 	public convenience init(title: String, image: UXImage? = nil, key: String? = nil, style: UXStyle = .regular, font: UXFont? = nil) {
 #if os(macOS)
-			self.init()
+		self.init()
+#else
+		self.init(type: .system)
+#endif
+		postInit(title: title, image: image, key: key, style: style, font: font)
+	}
+
+	internal func postInit(title: String, image: UXImage? = nil, key: String? = nil, style: UXStyle = .regular, font: UXFont? = nil) {
+#if os(macOS)
 			self.bezelStyle = .rounded
 #else
-			self.init(type: .system)
 #endif
 		self.translatesAutoresizingMaskIntoConstraints = false
 		if let key {
