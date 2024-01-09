@@ -9,7 +9,7 @@ import UIKit
 @available(tvOS 17, *)
 extension UXPopUp {
 
-	public convenience init(title: String, image: UXImage? = nil, style: UXStyle = .regular, font: UXFont? = nil, @UXMenuBuilder<Never> elements: () -> [UXMenuElement]) {
+	public convenience init(title: String, image: UXImage? = nil, style: UXStyle = .regular, font: UXFont? = nil, @MFMenuBuilder<Never> elements: () -> [UXMenuElement]) {
 		self.init(title: title, image: image, key: nil, style: style, font: font)
 #if os(macOS)
 		self.pullsDown = true
@@ -49,7 +49,7 @@ extension UXAction {
 		self.representedObject = _value
 		#else
 		self.init(title: title) { action in
-			let picker = action.sender as! AUXPopUpPicker<Value>
+			let picker = action.sender as! MFPopUpPicker<Value>
 			picker.pickValue(_value, from: action)
 		}
 		self.auxRepresentedObject = _value

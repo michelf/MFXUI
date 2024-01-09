@@ -1,6 +1,6 @@
 import Foundation
 
-open class AUXFormSection: UXView, AUXFormAlignable {
+open class MFFormSection: UXView, MFFormAlignable {
 
 	public static let labelSpacing: CGFloat = 12
 
@@ -15,7 +15,7 @@ open class AUXFormSection: UXView, AUXFormAlignable {
 		#endif
 
 		super.init(frame: .zero)
-		let stack = UXStackView(axis: .vertical, alignment: .leading, spacing: AUXFormRow.labelSpacing) { [titleView, contentView, footerView] in
+		let stack = UXStackView(axis: .vertical, alignment: .leading, spacing: MFFormRow.labelSpacing) { [titleView, contentView, footerView] in
 			if separator {
 				UXView.separator(axis: .horizontal)
 			}
@@ -52,7 +52,7 @@ open class AUXFormSection: UXView, AUXFormAlignable {
 
 	var formGuideConstraints: [UXLayoutConstraint] = []
 
-	public func alignContent(to guides: AUXFormLayoutGuides) {
+	public func alignContent(to guides: MFFormLayoutGuides) {
 		for constraint in formGuideConstraints {
 			constraint.isActive = false
 		}

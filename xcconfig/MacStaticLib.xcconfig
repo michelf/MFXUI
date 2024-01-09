@@ -1,4 +1,0 @@
-// Mac Static Lib
-
-#include "AppKitBase.xcconfig"
-#include "StaticLib.xcconfig"

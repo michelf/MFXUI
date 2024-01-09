@@ -3,7 +3,7 @@ import AppKit
 
 /// A text field where the intrinsic size adjusts itself vertically to fit its
 /// content.
-open class AUXTextField: NSTextField {
+open class MFTextField: NSTextField {
 
 	public override var intrinsicContentSize: NSSize {
 		let magicWidthMargin: CGFloat = 4
@@ -48,13 +48,33 @@ open class AUXTextField: NSTextField {
 	}
 
 	@usableFromInline
-	internal var onEditingCallback: ((AUXTextField) -> ())?
+	internal var onEditingCallback: ((MFTextField) -> ())?
 
+}
+
+extension MFTextField: MFEditable {
+	public var editableValue: String {
+		get { text ?? "" }
+		set { text = newValue }
+	}
+	public func onEditing(_ callback: @escaping (String) -> ()) -> Self {
+		onEditing { callback($0.editableValue) }
+	}
 }
 #else
 import UIKit
 
-public class AUXTextField: UITextField {
+public class MFTextField: UITextField {
 	// unimplemented
 }
+extension MFTextField: MFEditable {
+	public var editableValue: String {
+		get { text ?? "" }
+		set { text = newValue }
+	}
+	public func onEditing(_ callback: @escaping (String) -> ()) -> Self {
+		onChange { callback($0.editableValue) }
+	}
+}
 #endif
+

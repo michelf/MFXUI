@@ -1,9 +1,9 @@
 import Foundation
 
 @propertyWrapper
-public struct AUXObservable<Value: Equatable> {
+public struct MFObservable<Value: Equatable> {
 	private var _wrappedValue: Value
-	private var _changeToken = AUXObservableToken()
+	private var _changeToken = MFObservableToken()
 
 	public init(wrappedValue initialValue: Value) {
 		self._wrappedValue = initialValue
@@ -38,7 +38,7 @@ public struct AUXObservable<Value: Equatable> {
 		_changeToken.didChange(updateToken: updateToken)
 	}
 
-	public var projectedValue: AUXObservableToken {
+	public var projectedValue: MFObservableToken {
 		get { _changeToken }
 		set { _changeToken = newValue }
 		_modify { yield &_changeToken }
@@ -46,9 +46,9 @@ public struct AUXObservable<Value: Equatable> {
 }
 
 @propertyWrapper
-public struct AUXRawObservable<Value> {
+public struct MFRawObservable<Value> {
 	private var _wrappedValue: Value
-	private var _changeToken = AUXObservableToken()
+	private var _changeToken = MFObservableToken()
 
 	public init(wrappedValue initialValue: Value) {
 		self._wrappedValue = initialValue
@@ -82,29 +82,29 @@ public struct AUXRawObservable<Value> {
 		_changeToken.didChange(updateToken: updateToken)
 	}
 
-	public var projectedValue: AUXObservableToken {
+	public var projectedValue: MFObservableToken {
 		get { _changeToken }
 		set { _changeToken = newValue }
 		_modify { yield &_changeToken }
 	}
 }
 
-public struct AUXObservableToken {
+public struct MFObservableToken {
 
 	public init() {}
 
 	public func didAccess() {
-		AUXObservatory.didAccess(revision)
+		MFObservatory.didAccess(revision)
 	}
 
 	public mutating func willChange() {
-		AUXObservatory.willChange(revision)
+		MFObservatory.willChange(revision)
 	}
 	public mutating func didChange() {
 		didChange(updateToken: true)
 	}
 	fileprivate mutating func didChange(updateToken: Bool) {
-		AUXObservatory.didChange(revision)
+		MFObservatory.didChange(revision)
 		if updateToken {
 			revision = Self.nextRevision()
 		}
@@ -126,14 +126,14 @@ public struct AUXObservableToken {
 	fileprivate static var _lastRevision: Revision = 0
 }
 
-public struct AUXObservationSet: Hashable {
-	fileprivate var revisions: Set<AUXObservableToken.Revision> = []
+public struct MFObservationSet: Hashable {
+	fileprivate var revisions: Set<MFObservableToken.Revision> = []
 
 	public var isEmpty: Bool {
 		revisions.isEmpty
 	}
 
-	public func overlaps(with other: AUXObservationSet) -> Bool {
+	public func overlaps(with other: MFObservationSet) -> Bool {
 		!revisions.isDisjoint(with: other.revisions)
 	}
 
@@ -148,37 +148,37 @@ public struct AUXObservationSet: Hashable {
 		}
 	}
 
-	public static func onChange(_ apply: @escaping (AUXObservationSet) -> ()) -> AnyObject? {
-		NotificationCenter.default.addObserver(forName: AUXObservatory.mutationNotificationName, object: nil, queue: nil) { notification in
+	public static func onChange(_ apply: @escaping (MFObservationSet) -> ()) -> AnyObject? {
+		NotificationCenter.default.addObserver(forName: MFObservatory.mutationNotificationName, object: nil, queue: nil) { notification in
 			assert(Thread.isMainThread)
-			if let observationSet = notification.userInfo?[AUXObservatory.tokensInfoKey] as? AUXObservationSet {
+			if let observationSet = notification.userInfo?[MFObservatory.tokensInfoKey] as? MFObservationSet {
 				apply(observationSet)
 			}
 		}
 	}
 }
 
-extension AUXObservatory {
+extension MFObservatory {
 
-	fileprivate static var _accessSet: AUXObservationSet?
-	fileprivate static var _changeSet: AUXObservationSet?
+	fileprivate static var _accessSet: MFObservationSet?
+	fileprivate static var _changeSet: MFObservationSet?
 
 	static var experimental_usesSwiftObservation = false
 
-	public static func observe(_ apply: () -> ()) -> AUXObservationSet {
-		var accessSet = AUXObservationSet()
+	public static func observe(_ apply: () -> ()) -> MFObservationSet {
+		var accessSet = MFObservationSet()
 		observe(updating: &accessSet, apply)
 		return accessSet
 	}
 	/// Observe accesses during task while updating an old access set.
-	static func observe<R>(updating accessSet: inout AUXObservationSet, _ apply: () -> R) -> R {
+	static func observe<R>(updating accessSet: inout MFObservationSet, _ apply: () -> R) -> R {
 		assert(Thread.isMainThread)
-		precondition(!isObserving, "Cannot nest AUXObservationTracking observations.")
+		precondition(!isObserving, "Cannot nest MFObservationTracking observations.")
 
 		// clear old accessSet
 		accessSet.revisions.removeAll(keepingCapacity: true)
 
-		_accessSet = AUXObservationSet()
+		_accessSet = MFObservationSet()
 		swap(&_accessSet!, &accessSet)
 		let result = apply()
 		swap(&_accessSet!, &accessSet)
@@ -187,40 +187,40 @@ extension AUXObservatory {
 		return result
 	}
 	static var isObserving: Bool {
-		AUXObservatory._accessSet != nil
+		MFObservatory._accessSet != nil
 	}
 
-	fileprivate static func didAccess(_ revision: AUXObservableToken.Revision) {
-		AUXObservatory._accessSet?.revisions.insert(revision)
+	fileprivate static func didAccess(_ revision: MFObservableToken.Revision) {
+		MFObservatory._accessSet?.revisions.insert(revision)
 		if experimental_usesSwiftObservation, #available(macOS 14, iOS 17, tvOS 17, *) {
-			observationRegistrar.access(shared, keyPath: \AUXObservatory[revision])
+			observationRegistrar.access(shared, keyPath: \MFObservatory[revision])
 		}
 	}
 
-	fileprivate static func willChange(_ revision: AUXObservableToken.Revision) {
+	fileprivate static func willChange(_ revision: MFObservableToken.Revision) {
 		if experimental_usesSwiftObservation, #available(macOS 14, iOS 17, tvOS 17, *) {
-			observationRegistrar.willSet(shared, keyPath: \AUXObservatory[revision])
+			observationRegistrar.willSet(shared, keyPath: \MFObservatory[revision])
 		}
 	}
 
-	fileprivate static func didChange(_ revision: AUXObservableToken.Revision) {
+	fileprivate static func didChange(_ revision: MFObservableToken.Revision) {
 		if experimental_usesSwiftObservation, #available(macOS 14, iOS 17, tvOS 17, *) {
-			observationRegistrar.didSet(shared, keyPath: \AUXObservatory[revision])
+			observationRegistrar.didSet(shared, keyPath: \MFObservatory[revision])
 		}
-		if AUXObservatory._changeSet == nil {
+		if MFObservatory._changeSet == nil {
 			setupImplicitObservationTransaction()
 		}
-		AUXObservatory._changeSet!.revisions.insert(revision)
+		MFObservatory._changeSet!.revisions.insert(revision)
 	}
 
 	private static func setupImplicitObservationTransaction() {
-		AUXObservatory._changeSet = AUXObservationSet()
+		MFObservatory._changeSet = MFObservationSet()
 		let runLoopReadyObserver = CFRunLoopObserverCreateWithHandler(nil, CFRunLoopActivity.beforeWaiting.rawValue, false, 0) { observer, activity in
-			let changeSet = AUXObservatory._changeSet!
-			AUXObservatory._changeSet = nil
+			let changeSet = MFObservatory._changeSet!
+			MFObservatory._changeSet = nil
 			guard !changeSet.isEmpty else { return }
-			NotificationCenter.default.post(name: AUXObservatory.mutationNotificationName, object: nil, userInfo: [
-				AUXObservatory.tokensInfoKey: changeSet
+			NotificationCenter.default.post(name: MFObservatory.mutationNotificationName, object: nil, userInfo: [
+				MFObservatory.tokensInfoKey: changeSet
 			])
 		}
 		let runLoop = CFRunLoopGetMain()
@@ -232,10 +232,10 @@ extension AUXObservatory {
 
 }
 
-public final class AUXObservatory: Observable {
+public final class MFObservatory: Observable {
 
 	@available(macOS 14, iOS 17, tvOS 17, *)
-	static let shared = AUXObservatory()
+	static let shared = MFObservatory()
 
 	@available(macOS 14, iOS 17, tvOS 17, *)
 	private init() {}
@@ -244,7 +244,7 @@ public final class AUXObservatory: Observable {
 	fileprivate static let observationRegistrar = ObservationRegistrar()
 
 	@available(macOS 14, iOS 17, tvOS 17, *)
-	fileprivate subscript (_ revision: AUXObservableToken.Revision) -> () {
+	fileprivate subscript (_ revision: MFObservableToken.Revision) -> () {
 		get { () }
 		set { _ = newValue }
 	}

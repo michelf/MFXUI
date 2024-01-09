@@ -1,13 +1,14 @@
 import Foundation
 import CoreGraphics
 
-open class AUXFormRow: UXView, AUXFormAlignable {
+open class MFFormRow: UXView, MFFormAlignable {
 
 	public static let labelSpacing: CGFloat = 12
 
 	public init(label: String = "", usesColon: Bool = true, @UXSingleViewBuilder _ content: () -> UXView) {
 		self.label = label
 		self.labelView = UXLabel(label: label)
+		self.labelView.setContentHuggingPriority(.defaultLow, for: .horizontal)
 		self.contentView = content()
 
 		var spacing: CGFloat = 0
@@ -17,7 +18,7 @@ open class AUXFormRow: UXView, AUXFormAlignable {
 		#endif
 
 		super.init(frame: .zero)
-		let stack = UXStackView(axis: .horizontal, alignment: .firstBaseline, spacing: AUXFormRow.labelSpacing) { [labelView, contentView] in
+		let stack = UXStackView(axis: .horizontal, alignment: .firstBaseline, spacing: MFFormRow.labelSpacing) { [labelView, contentView] in
 			labelView
 			contentView
 		}
@@ -51,7 +52,7 @@ open class AUXFormRow: UXView, AUXFormAlignable {
 
 	public var formGuideConstraints: [UXLayoutConstraint] = []
 
-	public func alignContent(to guides: AUXFormLayoutGuides) {
+	public func alignContent(to guides: MFFormLayoutGuides) {
 		for c in formGuideConstraints {
 			c.isActive = false
 		}
@@ -64,22 +65,53 @@ open class AUXFormRow: UXView, AUXFormAlignable {
 
 		switch guides {
 		case .basic(labelGuide: let labelGuide, contentGuide: let contentGuide):
-			labelView.text = AUXFormRow.adjustLabelText(label, usesColon: true)
+			labelView.text = MFFormRow.adjustLabelText(label, usesColon: true)
 			labelView.textAlignment = .right
 			formGuideConstraints = [
 				labelView.trailingAnchor.constraint(equalTo: labelGuide.trailingAnchor),
 				contentView.leadingAnchor.constraint(equalTo: contentGuide.leadingAnchor),
-				self.trailingAnchor.constraint(equalTo: contentGuide.trailingAnchor),
+				self.trailingAnchor.constraint(equalTo: contentGuide.trailingAnchor).withPriority(.defaultHigh),
 			]
 		case .outward(labelGuide: let labelGuide, contentGuide: let contentGuide):
 			labelView.text = label
 			labelView.textAlignment = .natural
 			formGuideConstraints = [
-				labelView.leadingAnchor.constraint(equalTo: labelGuide.leadingAnchor),
+				labelView.leadingAnchor.constraint(equalTo: labelGuide.leadingAnchor).withPriority(.defaultHigh),
 				contentView.leadingAnchor.constraint(greaterThanOrEqualTo: labelGuide.leadingAnchor),
-				contentView.trailingAnchor.constraint(equalTo: contentGuide.trailingAnchor),
+				contentView.trailingAnchor.constraint(equalTo: contentGuide.trailingAnchor).withPriority(.defaultHigh),
 			]
+			contentView.adaptForOutwardAlignment()
 		}
 	}
 
+}
+
+extension UXView {
+	@objc func adaptForOutwardAlignment() {
+		// override in subclasses
+	}
+}
+
+extension UXTextField {
+	override func adaptForOutwardAlignment() {
+		#if os(macOS)
+		let dir = userInterfaceLayoutDirection
+		#else
+		let dir = traitCollection.layoutDirection
+		#endif
+		switch dir {
+		case .leftToRight:
+			textAlignment = .right
+		case .rightToLeft:
+			textAlignment = .left
+		default:
+			break
+		}
+	}
+}
+
+extension UXStackView {
+	override func adaptForOutwardAlignment() {
+		subviews.forEach { $0.adaptForOutwardAlignment() }
+	}
 }

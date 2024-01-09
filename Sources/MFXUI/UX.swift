@@ -13,6 +13,7 @@ import AppKit
 
 public typealias UXEvent = NSEvent
 public typealias UXApplication = NSApplication
+public typealias UXApplicationDelegate = NSApplicationDelegate
 
 public typealias UXTabBarController = NSTabViewController
 public typealias UXSplitViewController = NSSplitViewController
@@ -223,6 +224,7 @@ import UIKit
 
 public typealias UXEvent = UIEvent
 public typealias UXApplication = UIApplication
+public typealias UXApplicationDelegate = UIApplicationDelegate
 
 public typealias UXWindow = UIWindow
 public typealias UXTabBarController = UITabBarController

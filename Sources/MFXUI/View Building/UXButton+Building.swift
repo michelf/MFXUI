@@ -59,6 +59,7 @@ extension UXButton {
 			self.bezelStyle = .rounded
 #else
 #endif
+		self.setContentHuggingPriority(.defaultHigh, for: .horizontal)
 		self.translatesAutoresizingMaskIntoConstraints = false
 		if let key {
 			#if os(macOS)

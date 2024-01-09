@@ -1,22 +1,22 @@
 import Foundation
 
-public enum AUXUpdateScheduler {
+public enum MFUpdateScheduler {
 	case immediate
 	case delayed(TimeInterval)
 	case throttled(TimeInterval)
 }
 
-class AUXBinding: NSObject {
+class MFBinding: NSObject {
 
-	unowned let view: UXView
-	let viewUpdateCallback: (UXView) -> ()
-	let scheduling: AUXUpdateScheduler
+	unowned let view: MFBindableObject
+	let viewUpdateCallback: (MFBindableObject) -> ()
+	let scheduling: MFUpdateScheduler
 	var pendingUpdate: Bool = false
 	var lastUpdateTime: DispatchTime
-	private(set) var observationSet = AUXObservationSet()
+	private(set) var observationSet = MFObservationSet()
 
 	@discardableResult
-	fileprivate init?(view: UXView, scheduling: AUXUpdateScheduler, update: @escaping (UXView) -> ()) {
+	internal init?(view: MFBindableObject, scheduling: MFUpdateScheduler, update: @escaping (MFBindableObject) -> ()) {
 		self.view = view
 		self.viewUpdateCallback = update
 		self.scheduling = scheduling
@@ -30,17 +30,17 @@ class AUXBinding: NSObject {
 		// view retains the binding
 		view.auxBindings.append(self)
 		// register for changes
-		NotificationCenter.default.addObserver(self, selector: #selector(handleOnChangeNotification), name: AUXObservatory.mutationNotificationName, object: nil)
+		NotificationCenter.default.addObserver(self, selector: #selector(handleOnChangeNotification), name: MFObservatory.mutationNotificationName, object: nil)
 	}
 
 	func updateView() {
-		AUXObservatory.observe(updating: &observationSet) {
+		MFObservatory.observe(updating: &observationSet) {
 			viewUpdateCallback(view)
 		}
 	}
 
 	@objc private func handleOnChangeNotification(_ notification: Notification) {
-		guard let changeSet = notification.userInfo?[AUXObservatory.tokensInfoKey] as? AUXObservationSet else { return }
+		guard let changeSet = notification.userInfo?[MFObservatory.tokensInfoKey] as? MFObservationSet else { return }
 		guard changeSet.overlaps(with: observationSet) else { return }
 		scheduleViewUpdate()
 	}
@@ -95,17 +95,20 @@ class AUXBinding: NSObject {
 
 }
 
+public protocol MFBindableObject: AnyObject {}
+extension UXView: MFBindableObject {}
+extension UXAction: MFBindableObject {}
 
-extension NSObjectProtocol where Self: UXView {
+extension MFBindableObject {
 
-	public func binding<T>(_ keyPath: ReferenceWritableKeyPath<Self, T>, to get: @escaping @autoclosure () -> T, scheduling: AUXUpdateScheduler = .immediate) -> Self {
+	public func binding<T>(_ keyPath: ReferenceWritableKeyPath<Self, T>, to get: @escaping @autoclosure () -> T, scheduling: MFUpdateScheduler = .immediate) -> Self {
 		binding(scheduling: scheduling) {
 			$0[keyPath: keyPath] = get()
 		}
 	}
 
-	public func binding(scheduling: AUXUpdateScheduler = .immediate, update: @escaping (Self) -> ()) -> Self {
-		AUXBinding(view: self, scheduling: scheduling) { view in
+	public func binding(scheduling: MFUpdateScheduler = .immediate, update: @escaping (Self) -> ()) -> Self {
+		MFBinding(view: self, scheduling: scheduling) { view in
 			update(view as! Self)
 		}
 		return self
@@ -113,17 +116,18 @@ extension NSObjectProtocol where Self: UXView {
 
 }
 
-extension UXView {
 
-	private static var auxBindingsAssociatedObjectID : UInt8 = 0
+private var auxBindingsAssociatedObjectID : UInt8 = 0
 
-	var auxBindings: [AUXBinding] {
+extension MFBindableObject {
+
+	fileprivate var auxBindings: [MFBinding] {
 		set {
-			objc_setAssociatedObject(self, &UXView.auxBindingsAssociatedObjectID, newValue as NSArray,
+			objc_setAssociatedObject(self, &auxBindingsAssociatedObjectID, newValue as NSArray,
 									 objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
 		}
 		get {
-			objc_getAssociatedObject(self, &UXView.auxBindingsAssociatedObjectID) as! [AUXBinding]? ?? []
+			objc_getAssociatedObject(self, &auxBindingsAssociatedObjectID) as! [MFBinding]? ?? []
 		}
 	}
 
@@ -132,8 +136,8 @@ extension UXView {
 
 private func bindingTest() {
 	class M {
-		@AUXObservable var name: String = ""
-		@AUXObservable var shouldBeHidden: Bool = false
+		@MFObservable var name: String = ""
+		@MFObservable var shouldBeHidden: Bool = false
 	}
 	let m = M()
 	let view = UXTextField()

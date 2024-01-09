@@ -1,23 +1,23 @@
 import Foundation
 
-public enum AUXFormLayoutGuides {
+public enum MFFormLayoutGuides {
 	case basic(labelGuide: UXLayoutGuide, contentGuide: UXLayoutGuide)
 	case outward(labelGuide: UXLayoutGuide, contentGuide: UXLayoutGuide)
 }
 
-public protocol AUXFormAlignable {
-	func alignContent(to guides: AUXFormLayoutGuides)
+public protocol MFFormAlignable {
+	func alignContent(to guides: MFFormLayoutGuides)
 }
 extension UXView {
-	func alignSubviews(to guides: AUXFormLayoutGuides) {
+	func alignSubviews(to guides: MFFormLayoutGuides) {
 		for subview in self.subviews {
-			(subview as? AUXFormAlignable)?.alignContent(to: guides)
+			(subview as? MFFormAlignable)?.alignContent(to: guides)
 			subview.alignSubviews(to: guides)
 		}
 	}
 }
 
-open class AUXFormView: UXView {
+open class MFFormView: UXView {
 
 	public static let rowSpacing: CGFloat = 10
 
@@ -35,7 +35,7 @@ open class AUXFormView: UXView {
 	}
 
 	public init(layout: Layout = .default, @UXViewBuilder _ subviews: () -> [UXView]) {
-		self.stack = UXStackView(axis: .vertical, spacing: AUXFormView.rowSpacing, subviews)
+		self.stack = UXStackView(axis: .vertical, spacing: MFFormView.rowSpacing, subviews)
 
 		let labelGuide = UXLayoutGuide()
 		let contentGuide = UXLayoutGuide()
@@ -52,7 +52,7 @@ open class AUXFormView: UXView {
 		addSubview(stack)
 		addConstraints([
 			topAnchor.constraint(equalTo: stack.topAnchor),
-			bottomAnchor.constraint(equalTo: stack.bottomAnchor),
+			leftAnchor.constraint(equalTo: stack.leftAnchor),
 			widthAnchor.constraint(equalTo: stack.widthAnchor),
 			heightAnchor.constraint(equalTo: stack.heightAnchor),
 		])
@@ -65,7 +65,7 @@ open class AUXFormView: UXView {
 			contentGuide.topAnchor.constraint(equalTo: topAnchor),
 			contentGuide.bottomAnchor.constraint(equalTo: bottomAnchor),
 			labelGuide.leadingAnchor.constraint(equalTo: leadingAnchor),
-			contentGuide.leadingAnchor.constraint(equalTo: labelGuide.trailingAnchor, constant: AUXFormRow.labelSpacing),
+			contentGuide.leadingAnchor.constraint(equalTo: labelGuide.trailingAnchor, constant: MFFormRow.labelSpacing),
 			contentGuide.trailingAnchor.constraint(equalTo: trailingAnchor),
 		])
 
@@ -84,6 +84,6 @@ open class AUXFormView: UXView {
 	}
 
 	public let stack: UXStackView
-	public let guides: AUXFormLayoutGuides
+	public let guides: MFFormLayoutGuides
 
 }

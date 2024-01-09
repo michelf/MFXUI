@@ -4,16 +4,16 @@
 import PackageDescription
 
 let package = Package(
-	name: "CommonUX",
+	name: "MFXUI",
 	platforms: [.macOS(.v10_13), .tvOS(.v13), .iOS(.v14)],
 	products: [
-		.library(name: "CommonUX", targets: [
-			"CommonUX",
+		.library(name: "MFXUI", targets: [
+			"MFXUI",
 			"UXKit",
 		]),
 	],
 	targets: [
-		.target(name: "CommonUX", dependencies: ["UXKit"]),
+		.target(name: "MFXUI", dependencies: ["UXKit"]),
 		.target(name: "UXKit"),
 	]
 )

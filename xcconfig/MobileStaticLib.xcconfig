@@ -1,5 +1,0 @@
-// UIKit Static Lib
-
-#include "UIKitBase.xcconfig"
-#include "StaticLib.xcconfig"
-

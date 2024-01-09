@@ -1,7 +1,7 @@
-CommonUX
-========
+MFXUI
+=====
 
-CommonUX is a collection of helpers to ease the differences between AppKit and UIKit and allow many parts of the user interface of an application to reuse the same code on macOS, iOS, and tvOS.
+MFXUI is a collection of helpers to ease the differences between AppKit and UIKit and allow many parts of the user interface of an application to reuse the same code on macOS, iOS, and tvOS.
 
 This codebase while not small, has very little 'actual' code.
 Most stuff is just typealiases, constant aliases, etc.

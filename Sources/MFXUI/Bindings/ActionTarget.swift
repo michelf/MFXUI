@@ -9,7 +9,7 @@ import UIKit
 //@available(iOS, deprecated: 14)
 @available(tvOS, deprecated: 14)
 @usableFromInline
-internal final class AUXActionHandler: NSObject {
+internal final class MFActionHandler: NSObject {
 
 	@usableFromInline
 	var onClickCallback: ((AnyObject) -> ())?
@@ -37,7 +37,7 @@ internal final class AUXActionHandler: NSObject {
 
 }
 #if os(macOS)
-extension AUXActionHandler: NSTextFieldDelegate {
+extension MFActionHandler: NSTextFieldDelegate {
 	@usableFromInline
 	@objc func controlTextDidChange(_ obj: Notification) {
 		onChangeCallback?(obj.object as AnyObject)
@@ -48,12 +48,12 @@ extension AUXActionHandler: NSTextFieldDelegate {
 extension NSObjectProtocol where Self: NSObject {
 
 	@usableFromInline
-	var auxActionHandler: AUXActionHandler {
-		if let handler = objc_getAssociatedObject(self, &AUXActionHandler._associatedValueKey) as! AUXActionHandler? {
+	var auxActionHandler: MFActionHandler {
+		if let handler = objc_getAssociatedObject(self, &MFActionHandler._associatedValueKey) as! MFActionHandler? {
 			return handler
 		} else {
-			let handler = AUXActionHandler()
-			objc_setAssociatedObject(self, &AUXActionHandler._associatedValueKey, handler, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+			let handler = MFActionHandler()
+			objc_setAssociatedObject(self, &MFActionHandler._associatedValueKey, handler, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 			return handler
 		}
 	}
@@ -66,15 +66,15 @@ public extension NSObjectProtocol where Self: UXButton {
 	@inlinable
 	@discardableResult
 	func onClick(_ callback: @escaping (Self) -> ()) -> Self {
-		#if !os(macOS)
+#if !os(macOS)
 		if #available(iOS 14, tvOS 14, *) {
 			addAction(UIAction { [unowned self] _ in callback(self) }, for: .touchUpInside)
 			return self
 		}
-		#endif
+#endif
 		let handler = auxActionHandler
 		handler.onClickCallback = { callback($0 as! Self) }
-		return onClick(handler, #selector(AUXActionHandler.onClick))
+		return onClick(handler, #selector(MFActionHandler.onClick))
 	}
 
 }
@@ -86,36 +86,40 @@ public extension NSObjectProtocol where Self: UXTextField {
 	func onChange(_ callback: @escaping (Self) -> ()) -> Self {
 #if !os(macOS)
 		if #available(iOS 14, tvOS 14, *) {
-			addAction(UIAction { [unowned self] _ in callback(self) }, for: .valueChanged)
+			addAction(UIAction { [unowned self] _ in
+				callback(self)
+			}, for: .editingChanged)
 			return self
 		}
 #endif
 		let handler = auxActionHandler
 		handler.onChangeCallback = { callback($0 as! Self) }
-		return onChange(handler, #selector(AUXActionHandler.onChange))
+		return onChange(handler, #selector(MFActionHandler.onChange))
 	}
 
 }
-public extension NSObjectProtocol where Self: AUXTextField {
+public extension NSObjectProtocol where Self: MFTextField {
 	@inlinable
 	@discardableResult
 	func onEditing(_ callback: @escaping (Self) -> ()) -> Self {
 #if os(macOS)
 //		let handler = auxActionHandler
-//		NotificationCenter.default.addObserver(handler, selector: #selector(AUXActionHandler.controlTextDidChange), name: NSControl.textDidChangeNotification, object: self)
+//		NotificationCenter.default.addObserver(handler, selector: #selector(MFActionHandler.controlTextDidChange), name: NSControl.textDidChangeNotification, object: self)
 //		self.delegate = handler
 //		self.isContinuous = true
 		self.onEditingCallback = { callback($0 as! Self) }
-//		return onChange(handler, #selector(AUXActionHandler.onChange))
+//		return onChange(handler, #selector(MFActionHandler.onChange))
 		return self
 #else
-		if #available(iOS 14, tvOS 14, *) {
-			addAction(UIAction { [unowned self] _ in callback(self) }, for: .valueChanged)
-			return self
-		}
-		let handler = auxActionHandler
-		handler.onChangeCallback = { callback($0 as! Self) }
-		return onChange(handler, #selector(AUXActionHandler.onChange))
+		return onChange(callback)
+
+//		if #available(iOS 14, tvOS 14, *) {
+//			addAction(UIAction { [unowned self] _ in callback(self) }, for: .valueChanged)
+//			return self
+//		}
+//		let handler = auxActionHandler
+//		handler.onChangeCallback = { callback($0 as! Self) }
+//		return onChange(handler, #selector(MFActionHandler.onChange))
 #endif
 	}
 }
@@ -135,7 +139,7 @@ public extension NSObjectProtocol where Self: UXSwitch {
 		#endif
 		let handler = auxActionHandler
 		handler.onChangeCallback = { callback($0 as! Self) }
-		return onChange(handler, #selector(AUXActionHandler.onChange))
+		return onChange(handler, #selector(MFActionHandler.onChange))
 	}
 
 }
@@ -149,7 +153,7 @@ public extension NSObjectProtocol where Self: UXPopUp {
 		#if os(macOS)
 		let handler = auxActionHandler
 		handler.onChangeCallback = { callback($0 as! Self) }
-		return onChange(handler, #selector(AUXActionHandler.onChange))
+		return onChange(handler, #selector(MFActionHandler.onChange))
 		#else
 		if #available(iOS 14, tvOS 14, *) {
 			addAction(UIAction { [unowned self] _ in callback(self) }, for: .valueChanged)
@@ -157,7 +161,7 @@ public extension NSObjectProtocol where Self: UXPopUp {
 		}
 		let handler = auxActionHandler
 		handler.onChangeCallback = { callback($0 as! Self) }
-		addTarget(handler, action: #selector(AUXActionHandler.onChange), for: .valueChanged)
+		addTarget(handler, action: #selector(MFActionHandler.onChange), for: .valueChanged)
 		return self
 		#endif
 	}
@@ -171,7 +175,7 @@ public extension NSObjectProtocol where Self: UXSegmentedControl {
 	func onClick(_ callback: @escaping (Self) -> ()) -> Self {
 		let handler = auxActionHandler
 		handler.onClickCallback = { callback($0 as! Self) }
-		return onClick(handler, #selector(AUXActionHandler.onClick))
+		return onClick(handler, #selector(MFActionHandler.onClick))
 	}
 	#endif
 	@inlinable
@@ -185,7 +189,7 @@ public extension NSObjectProtocol where Self: UXSegmentedControl {
 		#endif
 		let handler = auxActionHandler
 		handler.onChangeCallback = { callback($0 as! Self) }
-		return onChange(handler, #selector(AUXActionHandler.onChange))
+		return onChange(handler, #selector(MFActionHandler.onChange))
 	}
 }
 
@@ -197,7 +201,7 @@ public extension NSObjectProtocol where Self: UXTableView {
 	func onClick(_ callback: @escaping (Self) -> ()) -> Self {
 		let handler = auxActionHandler
 		handler.onClickCallback = { callback($0 as! Self) }
-		return onClick(handler, #selector(AUXActionHandler.onClick))
+		return onClick(handler, #selector(MFActionHandler.onClick))
 	}
 
 	@inlinable
@@ -205,7 +209,7 @@ public extension NSObjectProtocol where Self: UXTableView {
 	func onDoubleClick(_ callback: @escaping (Self) -> ()) -> Self {
 		let handler = auxActionHandler
 		handler.onDoubleClickCallback = { callback($0 as! Self) }
-		return onDoubleClick(handler, #selector(AUXActionHandler.onDoubleClick))
+		return onDoubleClick(handler, #selector(MFActionHandler.onDoubleClick))
 	}
 
 }

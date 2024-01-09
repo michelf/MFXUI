@@ -9,25 +9,25 @@ import UIKit
 // Adapted from ArrayElementListBuilder in SwiftSyntax/SwiftSyntaxBuilder
 
 @available(tvOS 17.0, *)
-public struct AUXMenuSection<Value: Equatable> {
+public struct MFMenuSection<Value: Equatable> {
 	public var title: String?
 	public var children: [UXMenuElement]
-	public init(title: String? = nil, @UXMenuBuilder<Value> children: () -> [UXMenuElement]) {
+	public init(title: String? = nil, @MFMenuBuilder<Value> children: () -> [UXMenuElement]) {
 		self.title = title
 		self.children = children()
 	}
 }
 @available(tvOS 17.0, *)
-public struct AUXSubmenu<Value: Equatable> {
+public struct MFSubmenu<Value: Equatable> {
 	public var title: String
 	public var children: [UXMenuElement]
-	public init(title: String, @UXMenuBuilder<Value> children: () -> [UXMenuElement]) {
+	public init(title: String, @MFMenuBuilder<Value> children: () -> [UXMenuElement]) {
 		self.title = title
 		self.children = children()
 	}
 }
 @available(tvOS 17.0, *)
-public struct AUXOption<Value: Equatable> {
+public struct MFOption<Value: Equatable> {
 	public var title: String
 	public var value: Value
 	public init(title: String, value: Value) {
@@ -38,7 +38,7 @@ public struct AUXOption<Value: Equatable> {
 
 @available(tvOS 17.0, *)
 @resultBuilder
-public struct UXMenuBuilder<Value: Equatable> {
+public struct MFMenuBuilder<Value: Equatable> {
 	/// The type of individual statement expressions in the transformed function,
 	/// which defaults to Component if buildExpression() is not provided.
 	public typealias Expression = UXMenuElement
@@ -64,7 +64,7 @@ public struct UXMenuBuilder<Value: Equatable> {
 	public static func buildExpression(_ expression: Self.Expression) -> Self.Component {
 		return [expression]
 	}
-	public static func buildExpression(_ section: AUXMenuSection<Value>) -> Self.Component {
+	public static func buildExpression(_ section: MFMenuSection<Value>) -> Self.Component {
 #if os(macOS)
 		// flatten section
 		var items = section.children
@@ -77,7 +77,7 @@ public struct UXMenuBuilder<Value: Equatable> {
 		return [UIMenu(title: section.title ?? "", options: .displayInline, children: section.children)]
 #endif
 	}
-	public static func buildExpression(_ submenu: AUXSubmenu<Value>) -> Self.Component {
+	public static func buildExpression(_ submenu: MFSubmenu<Value>) -> Self.Component {
 #if os(macOS)
 		let menu = NSMenu()
 		menu.items = submenu.children
@@ -88,7 +88,7 @@ public struct UXMenuBuilder<Value: Equatable> {
 		return [UIMenu(title: submenu.title, children: submenu.children)]
 #endif
 	}
-	public static func buildExpression(_ option: AUXOption<Value>) -> Self.Component {
+	public static func buildExpression(_ option: MFOption<Value>) -> Self.Component {
 		[UXAction(title: option.title, _value: option.value)]
 	}
 

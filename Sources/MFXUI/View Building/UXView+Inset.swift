@@ -1,3 +1,4 @@
+import CoreGraphics
 
 extension UXView {
 
@@ -27,8 +28,8 @@ extension UXView {
 		self.insetBy(dx: inset, dy: inset)
 	}
 
-	public func indented(by indent: UXFloat? = nil) -> UXView {
-		self.inset(by: UXEdgeInsets(top: 0, left: indent ?? 20.5, bottom: 0, right: 0))
+	public func indented(by indent: UXFloat? = nil, level: Int = 1) -> UXView {
+		self.inset(by: UXEdgeInsets(top: 0, left: CGFloat(level) * (indent ?? 20.5), bottom: 0, right: 0))
 	}
 
 	public func centerHorizontal(insets: UXEdgeInsets?) -> UXView {

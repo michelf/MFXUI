@@ -5,14 +5,19 @@ import UIKit
 #endif
 
 @available(tvOS 17, *)
-public class AUXPopUpPicker<Value: Equatable>: UXPopUp {
+public class MFPopUpPicker<Value: Equatable>: UXPopUp {
 
-	public convenience init(style: UXStyle = .regular, font: UXFont? = nil, @UXMenuBuilder<Value> options: () -> [UXMenuElement]) {
+	public class func popUpMenu(_ accessor: MFEditableAccessor<Value>, style: UXStyle = .regular, font: UXFont? = nil, @MFMenuBuilder<Value> options: () -> [UXMenuElement]) -> MFPopUpPicker {
+		MFPopUpPicker(style: style, font: font, options: options)
+			.editing(accessor)
+	}
+
+	private convenience init(style: UXStyle = .regular, font: UXFont? = nil, @MFMenuBuilder<Value> options: () -> [UXMenuElement]) {
 		#if os(macOS)
-		Self.cellClass = AUXPopUpPickerCell<Value>.self
+		Self.cellClass = MFPopUpPickerCell<Value>.self
 		#endif
 		// standard button init
-		self.init(title: "", image: nil, key: nil, style: style, font: font)
+		self.init(title: "?", image: nil, key: nil, style: style, font: font)
 #if os(macOS)
 		self.pullsDown = false
 		let menu = NSMenu()
@@ -25,7 +30,7 @@ public class AUXPopUpPicker<Value: Equatable>: UXPopUp {
 		self.menu = menu
 #endif
 		// select first
-		menu.enumerateAllOptions { option, value, stop in
+		enumerateAllOptions { option, value, stop in
 			select(option)
 			stop = true
 		}
@@ -43,20 +48,20 @@ public class AUXPopUpPicker<Value: Equatable>: UXPopUp {
 
 	#if os(macOS)
 	private var _value: Value {
-		get { (cell as! AUXPopUpPickerCell)._value }
-		set { (cell as! AUXPopUpPickerCell)._value = newValue }
+		get { (cell as! MFPopUpPickerCell)._value }
+		set { (cell as! MFPopUpPickerCell)._value = newValue }
 	}
 	private var _selectedOption: UXAction? {
-		get { (cell as! AUXPopUpPickerCell)._value }
+		get { (cell as! MFPopUpPickerCell)._value }
 	}
 	#else
-	private var _value: Value?
+	private var _value: Value!
 	private var _selectedOption: UXAction?
 	func select(_ action: UXAction?) {
 		var found: (option: UXAction, value: Value)?
 		if let action {
 			// find original action in our template menu
-			menuTemplate.enumerateAllOptions { option, value, stop in
+			enumerateAllOptions { option, value, stop in
 				if option.identifier == action.identifier {
 					found = (option, value as! Value)
 				}
@@ -75,14 +80,15 @@ public class AUXPopUpPicker<Value: Equatable>: UXPopUp {
 	public var value: Value {
 		get { _value }
 		set {
+			guard newValue != _value else { return }
 			_value = newValue
 			var found = false
-			menu?.enumerateAllOptions { option, value, stop in
+			enumerateAllOptions { option, value, stop in
 				let value = value as! Value
 				if value == newValue {
 					select(option)
-					stop = true
 					found = true
+					stop = true
 				}
 			}
 			if !found {
@@ -91,10 +97,18 @@ public class AUXPopUpPicker<Value: Equatable>: UXPopUp {
 		}
 	}
 
+	func enumerateAllOptions(_ apply: (UXAction, Any, inout Bool) -> ()) {
+		#if os(macOS)
+		menu?.enumerateAllOptions(apply)
+		#else
+		menuTemplate?.enumerateAllOptions(apply)
+		#endif
+	}
+
 }
 
 #if os(macOS)
-private class AUXPopUpPickerCell<Value>: NSPopUpButtonCell {
+private class MFPopUpPickerCell<Value>: NSPopUpButtonCell {
 	fileprivate var _value: Value!
 	fileprivate var _selectedOption: UXAction?
 
@@ -164,6 +178,54 @@ extension UIMenu {
 			if stop { return true }
 		}
 		return false
+	}
+}
+#endif
+
+
+@available(tvOS 17, *)
+extension MFPopUpPicker: MFEditable {
+	public var editableValue: Value {
+		get { value }
+		set { value = newValue }
+	}
+	public func onEditing(_ callback: @escaping (Value) -> ()) -> Self {
+		onChange { callback($0.editableValue) }
+	}
+}
+
+#if os(macOS)
+#else
+extension UXAction {
+	public var isHidden: Bool {
+		get { attributes.contains(.hidden) }
+		set {
+			if newValue {
+				attributes.insert(.hidden)
+			} else {
+				attributes.remove(.hidden)
+			}
+		}
+	}
+	public var isEnabled: Bool {
+		get { !attributes.contains(.disabled) }
+		set {
+			if !newValue {
+				attributes.insert(.disabled)
+			} else {
+				attributes.remove(.disabled)
+			}
+		}
+	}
+	public var isDestructive: Bool {
+		get { attributes.contains(.destructive) }
+		set {
+			if newValue {
+				attributes.insert(.destructive)
+			} else {
+				attributes.remove(.destructive)
+			}
+		}
 	}
 }
 #endif
