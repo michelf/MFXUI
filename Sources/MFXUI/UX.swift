@@ -281,4 +281,11 @@ extension UXApplication {
 
 }
 
+extension UXView {
+
+	public var fittingSize: CGSize {
+		sizeThatFits(CGSize(width: 99999999, height: 99999999))
+	}
+}
+
 #endif
