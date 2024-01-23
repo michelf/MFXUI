@@ -10,38 +10,36 @@ public struct MFObservable<Value: Equatable> {
 	}
 
 	public var wrappedValue: Value {
-		get {
+		_read {
 			assert(Thread.isMainThread)
 			_changeToken.didAccess()
-			return _wrappedValue
+			yield _wrappedValue
 		}
 		set {
-			setWrappedValue(newValue)
+			assert(Thread.isMainThread)
+			guard wrappedValue != newValue else { return }
+			_changeToken.willChange()
+			_wrappedValue = newValue
+			_changeToken.didChange(updateToken: true)
 		}
-	}
-
-	// Access to the wrapped value without updating token when used with a class
-//	public static subscript<Object>(
-//		_enclosingInstance instance: Object,
-//		wrapped wrappedKeyPath: ReferenceWritableKeyPath<Object, Value>,
-//		storage storageKeyPath: ReferenceWritableKeyPath<Object, Self>
-//	) -> Value {
-//		get { instance[keyPath: storageKeyPath].wrappedValue }
-//		set { instance[keyPath: storageKeyPath].setWrappedValue(newValue, updateToken: false) }
-//	}
-
-	private mutating func setWrappedValue(_ newValue: Value, updateToken: Bool = true) {
-		assert(Thread.isMainThread)
-		guard wrappedValue != newValue else { return }
-		_changeToken.willChange()
-		_wrappedValue = newValue
-		_changeToken.didChange(updateToken: updateToken)
+		_modify {
+			// Modify-in-place accessor. can't check for equality in this scenario:
+			// 1. we could in theory skip the `didChange`: we'd need to keep a copy of
+			//    the old value to be able to do a comparison later, but this is what
+			//    we're trying to avoid with this modify accessor.
+			// 2. `willChange` needs to be fired before the value is changed,
+			//    but it's already too late once we know what the new value is
+			assert(Thread.isMainThread)
+			_changeToken.didAccess()
+			_changeToken.willChange()
+			yield &_wrappedValue
+			_changeToken.didChange(updateToken: true)
+		}
 	}
 
 	public var projectedValue: MFObservableToken {
 		get { _changeToken }
 		set { _changeToken = newValue }
-		_modify { yield &_changeToken }
 	}
 }
 
@@ -55,37 +53,67 @@ public struct MFRawObservable<Value> {
 	}
 
 	public var wrappedValue: Value {
-		get {
+		_read {
 			assert(Thread.isMainThread)
 			_changeToken.didAccess()
-			return _wrappedValue
+			yield _wrappedValue
 		}
 		set {
-			setWrappedValue(newValue)
+			assert(Thread.isMainThread)
+			_changeToken.willChange()
+			_wrappedValue = newValue
+			_changeToken.didChange(updateToken: true)
+		}
+		_modify {
+			assert(Thread.isMainThread)
+			_changeToken.didAccess()
+			_changeToken.willChange()
+			yield &_wrappedValue
+			_changeToken.didChange(updateToken: true)
 		}
 	}
 
-	// Access to the wrapped value without updating token when used with a class
+//	private var wrappedValueNoUpdateToken: Value {
+//		_read {
+//			assert(Thread.isMainThread)
+//			_changeToken.didAccess()
+//			yield _wrappedValue
+//		}
+//		set {
+//			assert(Thread.isMainThread)
+//			_changeToken.willChange()
+//			_wrappedValue = newValue
+//			_changeToken.didChange(updateToken: false)
+//		}
+//		_modify {
+//			assert(Thread.isMainThread)
+//			_changeToken.didAccess()
+//			_changeToken.willChange()
+//			yield &_wrappedValue
+//			_changeToken.didChange(updateToken: false)
+//		}
+//	}
+//
+//	// Access to the wrapped value without updating token when used with a class
 //	public static subscript<Object>(
 //		_enclosingInstance instance: Object,
 //		wrapped wrappedKeyPath: ReferenceWritableKeyPath<Object, Value>,
 //		storage storageKeyPath: ReferenceWritableKeyPath<Object, Self>
 //	) -> Value {
-//		get { instance[keyPath: storageKeyPath].wrappedValue }
-//		set { instance[keyPath: storageKeyPath].setWrappedValue(newValue, updateToken: false) }
+//		_read {
+//			yield instance[keyPath: storageKeyPath].wrappedValueNoUpdateToken
+//		}
+//		set {
+//			instance[keyPath: storageKeyPath].wrappedValueNoUpdateToken = newValue
+//		}
+//		_modify {
+//			yield &instance[keyPath: storageKeyPath].wrappedValueNoUpdateToken
+//		}
 //	}
-
-	private mutating func setWrappedValue(_ newValue: Value, updateToken: Bool = true) {
-		assert(Thread.isMainThread)
-		_changeToken.willChange()
-		_wrappedValue = newValue
-		_changeToken.didChange(updateToken: updateToken)
-	}
 
 	public var projectedValue: MFObservableToken {
 		get { _changeToken }
 		set { _changeToken = newValue }
-		_modify { yield &_changeToken }
 	}
 }
 
@@ -163,6 +191,7 @@ extension MFObservatory {
 	fileprivate static var _accessSet: MFObservationSet?
 	fileprivate static var _changeSet: MFObservationSet?
 
+	/// Set to true to enable Swift Observation compatibility (experimental).
 	static var experimental_usesSwiftObservation = false
 
 	public static func observe(_ apply: () -> ()) -> MFObservationSet {
@@ -227,11 +256,14 @@ extension MFObservatory {
 		CFRunLoopAddObserver(runLoop, runLoopReadyObserver, .commonModes)
 	}
 
-	internal static let mutationNotificationName = Notification.Name("_AUXObserveMut")
-	internal static let tokensInfoKey = "_AUXChTokens"
+	// Note: keeping these strings under the 15 character threshold to avoid
+	// dynamic allocations, thus reducing ARC traffic.
+	internal static let mutationNotificationName = Notification.Name("_MFObservMut")
+	internal static let tokensInfoKey = "_MFObservToks"
 
 }
 
+// For compatiblity with Swift Observation
 public final class MFObservatory: Observable {
 
 	@available(macOS 14, iOS 17, tvOS 17, *)
