@@ -34,7 +34,7 @@ open class MFFormView: UXView {
 		}
 	}
 
-	public init(layout: Layout = .default, @UXViewBuilder _ subviews: () -> [UXView]) {
+	public init(layout: Layout = .default, labelWidthRatio: CGFloat? = nil, @UXViewBuilder _ subviews: () -> [UXView]) {
 		self.stack = UXStackView(axis: .vertical, spacing: MFFormView.rowSpacing, subviews)
 
 		let labelGuide = UXLayoutGuide()
@@ -69,9 +69,11 @@ open class MFFormView: UXView {
 			contentGuide.trailingAnchor.constraint(equalTo: trailingAnchor),
 		])
 
-		labelGuide.widthAnchor.constraint(equalTo: contentGuide.widthAnchor, multiplier: 0.5)
-			.withPriority(.defaultHigh)
-			.isActive = true
+		if let labelWidthRatio {
+			labelGuide.widthAnchor.constraint(equalTo: contentGuide.widthAnchor, multiplier: labelWidthRatio)
+				.withPriority(.defaultHigh)
+				.isActive = true
+		}
 		labelGuide.widthAnchor.constraint(lessThanOrEqualTo: contentGuide.widthAnchor, multiplier: 1)
 			.withPriority(.required)
 			.isActive = true
