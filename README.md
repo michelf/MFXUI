@@ -1,132 +1,20 @@
 MFXUI
 =====
 
-MFXUI is a collection of helpers to ease the differences between AppKit and UIKit and allow many parts of the user interface of an application to reuse the same code on macOS, iOS, and tvOS.
+MFXUI is a collection of helpers to build user interfaces for macOS, iOS, and tvOS using in a declartive style similar to SwiftUI. It builds hiearchies of AppKit or UIKit views and has some provisions for bindings. In the most cases, MFXUI uses the system views unchanged, only adding extension methods and initializers (many of which are provided by UXKit).
 
-This codebase while not small, has very little 'actual' code.
-Most stuff is just typealiases, constant aliases, etc.
+**This is experimental at the moment.** It *works*, but the structure of the API is still subjet to change. Expect future versions of this library to break client code.
 
-The idea of this is NOT to provide a full cross platform abstraction.
-It is expected that a lot of apps will still carry `#if os(macOS)` like code to
-enable/disable specific features.
-
-Note: this is originally based on [UXKit from ZeeZide](https://github.com/ZeeZide), but has evolved a lot.
-
-## How to do write Cross-Platform Code using UXKit
-
-### View Aliases
-
-Generally instead of using `UIView` or `NSView`, you are using `UXView` in
-UXKit. UXKit provides a lot of such aliases to streamline the available classes.
-
-Sometimes different aliases point to the same class in one or the other
-framework. For example UIKit has `UILabel` and `UITextField` as distinct
-classes, while AppKit uses `NSTextField` for both, readonly and editable
-textfields.
-In UXKit you should then use the more specific UXKit variant. E.g. on AppKit,
-use `UXLabel` for readonly texts and `UXTextField` for editable lines, even
-though both alias to `NSTextField`. This way the code will work right on
-both platforms.
-
-Note: The far majority of those are really just typealiases and not subclasses.
-
-### Target/Action
-
-In UIKit one can attach multiple handlers to a single control action,
-and quite often there are multiple options on when the action fires
-(e.g. `touchUpInside` etc).
-This isn't usually available in AppKit. In AppKit a control usually has
-a single target, and usually one action (sometimes a second for double clicks).
-
-When doing a UXKit application, the code needs to constraint itself to using
-a single, 'semantic', action.
-For example this UIKit code:
-
-```swift
-button.addTarget(self, action: #selector(doIt(:_)), for: .touchUpInside)
-```
-
-Becomes:
-
-```swift
-button.onClick(self, #selector(doIt(:_)))
-```
-
-And works on both, UIKit and AppKit.
 
 TODO
-- gestures (below)
+----
 
-### Table Views
-
-`UITableView` is incorrectly labeled 'table view' - it really is a
-'list view' with support for sections.
-The AppKit `NSTableView` is an actual tableview with support for columns
-(and also sections).
-
-There are other differences. For example UIKit has a `UITableViewCell` which
-is a full implementation of a cell which can be used as-is in the table view.
-On AppKit, the corresponding `NSTableCellView` is just a shallow wrapper object
-maintaining just outlets to associated labels and such.
-To streamline the porting, UXKit adds a `NSTableViewCell` which matches the
-`UITableViewCell`.
-All of those are properly aliases to the corresponding UX names (i.e.
-`UXTableViewCell`).
-
-Another example is that UIKit *requires* the datasource to return an instance
-of `UITableViewCell` or a subclass of it.
-In AppKit you can return arbitrary views. So avoid doing that when you write
-portable code.
-
-Row editing is also different on UIKit and AppKit. For example reordering is
-done using drag&drop on AppKit, while UIKit has special builtin support for
-that.
-
-TODO
-- sectioned list view vs table view vs outline view
-- source lists
-- integrate the `UXTableViewController` into UXKit
-- row indexing is different, it includes sections on AppKit, but not on iOS
-  - this also affects things like selectedRow!
+- Untangle things with UXKit. Currently the UXKit module is part of the MFXUI package because the initial idea was to replace it. But whether MFXUI should be a full replacement or a complement is still up in the air.
 
 
-### Collection Views
+Acknowledgments
+---------------
 
-TODO
-- VC vs View factory
-- items are VCs on AppKit and Views on UIKit
-- layouts can be shared
+MFXUI by [Michel Fortin](https://michelf.ca/).
 
-### Layer based views
-
-TODO
-- explain the tricky parts
-- e.g. how layers transforms are reset in unexpected ways on AppKit
-
-### View Controllers
-
-TODO
-- representedObject for UIKit
-
-### Control Values
-
-TODO
-- formatters attached to controls
-- `objectValue` vs `intValue` etc
-
-### Gestures
-
-TODO
-
-### Alerts
-
-TODO
-- on AppKit buttons are selected by index
-- on UIKit actions are triggered by individual closures
-
-### Who
-
-**UXKit** is brought to you by
-[ZeeZide](http://zeezide.de).
-We like feedback, GitHub stars, cool contract work,
-presumably any form of praise you can think of.
+This is an extension of **UXKit** by [ZeeZide](http://zeezide.de).
